@@ -43,29 +43,29 @@ export async function getSolBalance(publicKeyString: string): Promise<number> {
   }
 }
 
-// Example usage
-async function main() {
-  try {
-    // Fetch current SOL price
-    console.log('Fetching current Solana price...');
-    const price = await getCurrentSolanaPrice();
-    console.log(`Current SOL price: $${price.toFixed(2)}`);
-    
-    // Example public key (replace with a real one to test)
-    const examplePublicKey = '11111111111111111111111111111112'; // System Program public key
-    
-    console.log(`\nFetching SOL balance for: ${examplePublicKey}`);
-    const balance = await getSolBalance(examplePublicKey);
-    console.log(`SOL Balance: ${balance.toFixed(4)} SOL`);
-    
-    // Calculate USD value
-    const usdValue = balance * price;
-    console.log(`USD Value: $${usdValue.toFixed(2)}`);
-    
-  } catch (error) {
-    console.error('Error in main function:', error);
-  }
-}
+// Example usage (commented out for MCP server usage)
+// async function main() {
+//   try {
+//     // Fetch current SOL price
+//     console.log('Fetching current Solana price...');
+//     const price = await getCurrentSolanaPrice();
+//     console.log(`Current SOL price: $${price.toFixed(2)}`);
+//     
+//     // Example public key (replace with a real one to test)
+//     const examplePublicKey = '11111111111111111111111111111112'; // System Program public key
+//     
+//     console.log(`\nFetching SOL balance for: ${examplePublicKey}`);
+//     const balance = await getSolBalance(examplePublicKey);
+//     console.log(`SOL Balance: ${balance.toFixed(4)} SOL`);
+//     
+//     // Calculate USD value
+//     const usdValue = balance * price;
+//     console.log(`USD Value: $${usdValue.toFixed(2)}`);
+//     
+//   } catch (error) {
+//     console.error('Error in main function:', error);
+//   }
+// }
 
 // Run the example
-main();
+getCurrentSolanaPrice().then(console.log);
