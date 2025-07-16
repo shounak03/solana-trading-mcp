@@ -1,9 +1,18 @@
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction, SystemProgram, sendAndConfirmTransaction, Keypair } from '@solana/web3.js';
 import fetch from 'node-fetch';
 
 // Solana RPC endpoint (you can use mainnet-beta, devnet, or testnet)
 const SOLANA_RPC_URL = 'https://api.devnet.solana.com';
 const connection = new Connection(SOLANA_RPC_URL, 'confirmed');
+
+// Store connected wallet info (in a real app, this would be more sophisticated)
+interface WalletInfo {
+  publicKey: string;
+  connected: boolean;
+  balance?: number;
+}
+
+let connectedWallet: WalletInfo | null = null;
 
 /**
  * Fetches the current Solana (SOL) price in USD
@@ -41,6 +50,193 @@ export async function getSolBalance(publicKeyString: string): Promise<number> {
     console.error('Error fetching SOL balance:', error);
     throw error;
   }
+}
+
+/**
+ * Connect a wallet by public key (simulated connection)
+ * @param publicKeyString - The wallet's public key
+ * @returns Promise<WalletInfo> - Connected wallet information
+ */
+export async function connectWallet(publicKeyString: string): Promise<WalletInfo> {
+  try {
+    // Validate the public key
+    const publicKey = new PublicKey(publicKeyString);
+    
+    // Get the balance
+    const balance = await getSolBalance(publicKeyString);
+    
+    // Store wallet info
+    connectedWallet = {
+      publicKey: publicKeyString,
+      connected: true,
+      balance: balance
+    };
+    
+    return connectedWallet;
+  } catch (error) {
+    console.error('Error connecting wallet:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get connected wallet information
+ * @returns WalletInfo | null - Current connected wallet or null if not connected
+ */
+export function getConnectedWallet(): WalletInfo | null {
+  return connectedWallet;
+}
+
+/**
+ * Disconnect the current wallet
+ */
+export function disconnectWallet(): void {
+  connectedWallet = null;
+}
+
+/**
+ * Simulate buying Solana (in reality, this would integrate with a DEX or CEX)
+ * @param usdAmount - Amount in USD to spend on SOL
+ * @returns Promise<object> - Transaction details
+ */
+export async function buySolana(usdAmount: number): Promise<{
+  success: boolean;
+  solReceived: number;
+  usdSpent: number;
+  newBalance: number;
+  message: string;
+}> {
+  try {
+    if (!connectedWallet) {
+      throw new Error('No wallet connected. Please connect a wallet first.');
+    }
+
+    if (usdAmount <= 0) {
+      throw new Error('Amount must be greater than 0');
+    }
+
+    // Store wallet reference for type safety
+    const wallet = connectedWallet;
+
+    // Get current SOL price
+    const solPrice = await getCurrentSolanaPrice();
+    
+    // Calculate SOL amount to receive (minus a 0.5% fee for simulation)
+    const feeRate = 0.005;
+    const solReceived = (usdAmount / solPrice) * (1 - feeRate);
+    
+    // Update wallet balance (simulated)
+    const currentBalance = await getSolBalance(wallet.publicKey);
+    const newBalance = currentBalance + solReceived;
+    
+    // Update connected wallet info
+    wallet.balance = newBalance;
+    
+    return {
+      success: true,
+      solReceived: solReceived,
+      usdSpent: usdAmount,
+      newBalance: newBalance,
+      message: `Successfully bought ${solReceived.toFixed(4)} SOL for $${usdAmount.toFixed(2)} USD at $${solPrice.toFixed(2)} per SOL`
+    };
+  } catch (error) {
+    console.error('Error buying Solana:', error);
+    throw error;
+  }
+}
+
+/**
+ * Simulate selling Solana (in reality, this would integrate with a DEX or CEX)
+ * @param solAmount - Amount of SOL to sell
+ * @returns Promise<object> - Transaction details
+ */
+export async function sellSolana(solAmount: number): Promise<{
+  success: boolean;
+  usdReceived: number;
+  solSold: number;
+  newBalance: number;
+  message: string;
+}> {
+  try {
+    if (!connectedWallet) {
+      throw new Error('No wallet connected. Please connect a wallet first.');
+    }
+
+    if (solAmount <= 0) {
+      throw new Error('Amount must be greater than 0');
+    }
+
+    // Store wallet reference for type safety (we know it's not null from the check above)
+    const wallet = connectedWallet!;
+
+    // Get current balance
+    const currentBalance = await getSolBalance(wallet.publicKey);
+    
+    if (solAmount > currentBalance) {
+      throw new Error(`Insufficient balance. Available: ${currentBalance.toFixed(4)} SOL, Requested: ${solAmount.toFixed(4)} SOL`);
+    }
+
+    // Get current SOL price
+    const solPrice = await getCurrentSolanaPrice();
+    
+    // Calculate USD to receive (minus a 0.5% fee for simulation)
+    const feeRate = 0.005;
+    const usdReceived = (solAmount * solPrice) * (1 - feeRate);
+    
+    // Update wallet balance (simulated)
+    const newBalance = currentBalance - solAmount;
+    
+    // Update connected wallet info
+    wallet.balance = newBalance;
+    
+    return {
+      success: true,
+      usdReceived: usdReceived,
+      solSold: solAmount,
+      newBalance: newBalance,
+      message: `Successfully sold ${solAmount.toFixed(4)} SOL for $${usdReceived.toFixed(2)} USD at $${solPrice.toFixed(2)} per SOL`
+    };
+  } catch (error) {
+    console.error('Error selling Solana:', error);
+    throw error;
+  }
+}
+
+/**
+ * Parse natural language amount into a number
+ * @param input - Natural language input like "1.5 SOL", "$100", "half my balance", etc.
+ * @param context - Context for relative amounts (like current balance)
+ * @returns number - Parsed amount
+ */
+export function parseNaturalLanguageAmount(input: string, context?: { balance?: number; solPrice?: number }): number {
+  const normalizedInput = input.toLowerCase().trim();
+  
+  // Remove currency symbols and common words
+  let cleanInput = normalizedInput
+    .replace(/[$,]/g, '')
+    .replace(/\b(usd|dollars?|sol|solana)\b/g, '')
+    .trim();
+  
+  // Handle relative amounts
+  if (normalizedInput.includes('all') || normalizedInput.includes('everything')) {
+    return context?.balance || 0;
+  }
+  
+  if (normalizedInput.includes('half')) {
+    return (context?.balance || 0) / 2;
+  }
+  
+  if (normalizedInput.includes('quarter')) {
+    return (context?.balance || 0) / 4;
+  }
+  
+  // Extract numeric value
+  const match = cleanInput.match(/(\d+\.?\d*)/);
+  if (match) {
+    return parseFloat(match[1]);
+  }
+  
+  throw new Error(`Could not parse amount from: "${input}". Please use a numeric value like "1.5" or "$100"`);
 }
 
 // Example usage (commented out for MCP server usage)
