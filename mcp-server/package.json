@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@jup-ag/core": "^4.0.0-beta.21",
     "@langchain/groq": "^0.2.3",
     "@langchain/langgraph": "^0.3.8",
     "@langchain/mcp-adapters": "^0.5.3",

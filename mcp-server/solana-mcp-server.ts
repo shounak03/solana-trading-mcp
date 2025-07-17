@@ -13,9 +13,8 @@ import {
   connectWallet, 
   getConnectedWallet, 
   disconnectWallet, 
-  buySolana, 
-  sellSolana, 
-  parseNaturalLanguageAmount 
+  parseNaturalLanguageAmount, 
+    swapSOLtoUSDC
 } from './index.js';
 
 // Create MCP server
@@ -204,7 +203,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // Parse the natural language amount to USD value
         const usdAmount = parseNaturalLanguageAmount(amount);
         
-        const result = await buySolana(usdAmount);
+        const result = await swapSOLtoUSDC(usdAmount);
         return {
           content: [
             {
@@ -215,32 +214,32 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
-      case 'sellSolana': {
-        const { amount } = args as { amount: string };
-        if (!amount) {
-          throw new Error('amount parameter is required');
-        }
+    //   case 'sellSolana': {
+    //     const { amount } = args as { amount: string };
+    //     if (!amount) {
+    //       throw new Error('amount parameter is required');
+    //     }
 
-        // Get current wallet for context
-        const wallet = getConnectedWallet();
-        const context = {
-          balance: wallet?.balance || 0,
-          solPrice: await getCurrentSolanaPrice()
-        };
+    //     // Get current wallet for context
+    //     const wallet = getConnectedWallet();
+    //     const context = {
+    //       balance: wallet?.balance || 0,
+    //       solPrice: await getCurrentSolanaPrice()
+    //     };
 
-        // Parse the natural language amount to SOL value
-        const solAmount = parseNaturalLanguageAmount(amount, context);
+    //     // Parse the natural language amount to SOL value
+    //     const solAmount = parseNaturalLanguageAmount(amount, context);
         
-        const result = await sellSolana(solAmount);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `💰 ${result.message}\n\n📊 Transaction Details:\n• SOL Sold: ${result.solSold.toFixed(4)} SOL\n• USD Received: $${result.usdReceived.toFixed(2)}\n• New Balance: ${result.newBalance.toFixed(4)} SOL\n• Transaction Fee: 0.5%`,
-            },
-          ],
-        };
-      }
+    //     const result = await sellSolana(solAmount);
+    //     return {
+    //       content: [
+    //         {
+    //           type: 'text',
+    //           text: `💰 ${result.message}\n\n📊 Transaction Details:\n• SOL Sold: ${result.solSold.toFixed(4)} SOL\n• USD Received: $${result.usdReceived.toFixed(2)}\n• New Balance: ${result.newBalance.toFixed(4)} SOL\n• Transaction Fee: 0.5%`,
+    //         },
+    //       ],
+    //     };
+    //   }
 
       case 'getSolBalance': {
         const { publicKey } = args as { publicKey: string };
