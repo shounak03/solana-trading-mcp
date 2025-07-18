@@ -15,7 +15,7 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Welcome to the Solana Chat! Connect your wallet to get started.',
+      text: 'Welcome to the Solana MCP Chat! I can help you check SOL prices, balances, and manage wallet connections. Try asking "What\'s the current SOL price?" to get started!',
       timestamp: new Date(),
       sender: 'bot'
     }
@@ -59,17 +59,38 @@ export default function ChatInterface() {
     setInputMessage('');
     setIsLoading(true);
 
-    // Simulate bot response (replace with actual MCP server communication)
-    setTimeout(() => {
+    try {
+      // Call the API route to communicate with MCP server
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage.text }),
+      });
+
+      const data = await response.json();
+
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: `You said: "${userMessage.text}". This is a demo response. Connect to MCP server for real functionality.`,
+        text: data.content || data.error || 'No response received',
         timestamp: new Date(),
         sender: 'bot'
       };
+
       setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Sorry, I encountered an error. Please make sure the MCP server is running.',
+        timestamp: new Date(),
+        sender: 'bot'
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -136,7 +157,7 @@ export default function ChatInterface() {
                 onKeyPress={handleKeyPress}
                 placeholder={connected ? "Type your message..." : "Connect wallet to start chatting"}
                 disabled={!connected || isLoading}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 rows={3}
               />
             </div>

@@ -14,7 +14,7 @@ import {
   getConnectedWallet, 
   disconnectWallet, 
   parseNaturalLanguageAmount, 
-    swapSOLtoUSDC
+  swapSOLtoUSDC
 } from './index.js';
 
 // Create MCP server

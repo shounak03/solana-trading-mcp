@@ -3,6 +3,12 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "start": "bun run http-server.ts",
+    "dev": "bun --hot http-server.ts",
+    "mcp-server": "bun run solana-mcp-server.ts",
+    "client": "bun run client.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
